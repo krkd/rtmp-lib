@@ -1,14 +1,16 @@
 package audio
 
 /*
-#cgo LDFLAGS: -lavformat -lavutil -lavcodec -lswresample
-#cgo CFLAGS: -Wno-deprecated
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-#include <libswresample/swresample.h>
-#include <libavutil/opt.h>
+
+#cgo pkg-config: libavformat libavcodec libavutil libswresample
+
 #include <string.h>
+
+#include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
+#include "libavutil/avutil.h"
+#include "libswresample/swresample.h"
+#include "libavutil/opt.h"
 
 typedef struct {
 	AVCodec *codec;
