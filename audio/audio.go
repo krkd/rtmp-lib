@@ -39,13 +39,12 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/notedit/rtmp-lib/aac"
-	"github.com/notedit/rtmp-lib/av"
+	"github.com/krkd/rtmp-lib/aac"
+	"github.com/krkd/rtmp-lib/av"
 	"runtime"
 	"time"
 	"unsafe"
 )
-
 
 type ffctx struct {
 	ff C.FFCtx
@@ -118,7 +117,7 @@ func (self *Resampler) Resample(in av.AudioFrame) (out av.AudioFrame, err error)
 
 	convertSamples := int(C.wrap_swresample_convert(
 		self.avr,
-		(*C.int)(unsafe.Pointer(&outData[0])),  C.int(outSampleCount),
+		(*C.int)(unsafe.Pointer(&outData[0])), C.int(outSampleCount),
 		(*C.int)(unsafe.Pointer(&inData[0])), C.int(inSampleCount),
 	))
 	if convertSamples < 0 {

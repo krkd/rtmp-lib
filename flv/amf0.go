@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/notedit/rtmp-lib/pio"
+	"github.com/krkd/rtmp-lib/pio"
 )
 
 type AMF0ParseError struct {

@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	rtmp "github.com/notedit/rtmp-lib"
-	"github.com/notedit/rtmp-lib/flv"
+	rtmp "github.com/krkd/rtmp-lib"
+	"github.com/krkd/rtmp-lib/flv"
 )
 
 func main() {

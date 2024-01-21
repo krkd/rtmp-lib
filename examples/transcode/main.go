@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	_ "github.com/notedit/rtmp-lib/aac"
-	"github.com/notedit/rtmp-lib/audio"
-	"github.com/notedit/rtmp-lib/av"
+	_ "github.com/krkd/rtmp-lib/aac"
+	"github.com/krkd/rtmp-lib/audio"
+	"github.com/krkd/rtmp-lib/av"
 	"os"
 
-	rtmp "github.com/notedit/rtmp-lib"
+	rtmp "github.com/krkd/rtmp-lib"
 )
-
-
-
 
 func main() {
 
@@ -24,15 +21,14 @@ func main() {
 			panic(err)
 		}
 
-		streams,err := conn.Streams()
-
+		streams, err := conn.Streams()
 
 		var enc av.AudioEncoder
 		var dec av.AudioDecoder
 
 		var adecodec av.AudioCodecData
 
-		for _,stream := range streams {
+		for _, stream := range streams {
 			if stream.Type().IsAudio() {
 				adecodec = stream.(av.AudioCodecData)
 				dec, _ = audio.NewAudioDecoderByName("aac")
@@ -68,7 +64,7 @@ func main() {
 				continue
 			}
 
-			ok,frame,err := dec.Decode(packet.Data)
+			ok, frame, err := dec.Decode(packet.Data)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -77,7 +73,7 @@ func main() {
 				continue
 			}
 
-			dur,_ := dec.PacketDuration(packet.Data)
+			dur, _ := dec.PacketDuration(packet.Data)
 			fmt.Println("decode dur", dur)
 
 			var _outpkts [][]byte
@@ -86,13 +82,13 @@ func main() {
 				continue
 			}
 
-			for _,outpkt := range _outpkts {
+			for _, outpkt := range _outpkts {
 				//adtsbuffer := []byte{}
 				//adtsheader := make([]byte, 7)
 				//aac.FillADTSHeader(adtsheader, aencodec.(aac.CodecData).Config, 1024, len(outpkt))
 				//adtsbuffer = append(adtsbuffer, adtsheader...)
 				//adtsbuffer = append(adtsbuffer, outpkt...)
-				dur,_ := enc.PacketDuration(outpkt)
+				dur, _ := enc.PacketDuration(outpkt)
 				file.Write(outpkt)
 				fmt.Println("encode dur", dur)
 				//
@@ -101,7 +97,6 @@ func main() {
 
 			}
 
-
 			fmt.Println(packet.Time)
 		}
 	}
@@ -109,18 +104,3 @@ func main() {
 	server.ListenAndServe()
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/notedit/rtmp-lib/av"
-	"github.com/notedit/rtmp-lib/flv"
-	"github.com/notedit/rtmp-lib/pio"
+	"github.com/krkd/rtmp-lib/av"
+	"github.com/krkd/rtmp-lib/flv"
+	"github.com/krkd/rtmp-lib/pio"
 )
 
 var Debug bool
@@ -67,7 +67,7 @@ type Server struct {
 
 func NewServer(config *Config) *Server {
 	server := &Server{
-		config:config,
+		config: config,
 	}
 	return server
 }
@@ -113,7 +113,6 @@ func (self *Server) ListenAndServe() (err error) {
 	if Debug {
 		fmt.Println("rtmp: server: listening on", addr)
 	}
-
 
 	for {
 		var netconn net.Conn

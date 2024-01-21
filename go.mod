@@ -1,3 +1,3 @@
-module github.com/notedit/rtmp-lib
+module github.com/krkd/rtmp-lib
 
 go 1.12

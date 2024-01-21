@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	rtmp "github.com/notedit/rtmp-lib"
+	rtmp "github.com/krkd/rtmp-lib"
 )
 
 var (

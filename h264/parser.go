@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/notedit/rtmp-lib/av"
-	"github.com/notedit/rtmp-lib/bits"
-	"github.com/notedit/rtmp-lib/pio"
+	"github.com/krkd/rtmp-lib/av"
+	"github.com/krkd/rtmp-lib/bits"
+	"github.com/krkd/rtmp-lib/pio"
 )
 
 const (

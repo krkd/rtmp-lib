@@ -1,7 +1,7 @@
 package pubsub
 
 import (
-	"github.com/notedit/rtmp-lib/av"
+	"github.com/krkd/rtmp-lib/av"
 )
 
 type Buf struct {

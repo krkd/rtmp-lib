@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/notedit/rtmp-lib/av"
-	"github.com/notedit/rtmp-lib/flv"
+	"github.com/krkd/rtmp-lib/av"
+	"github.com/krkd/rtmp-lib/flv"
 
-	rtmp "github.com/notedit/rtmp-lib"
-	"github.com/notedit/rtmp-lib/pubsub"
+	rtmp "github.com/krkd/rtmp-lib"
+	"github.com/krkd/rtmp-lib/pubsub"
 )
 
 type Channel struct {
