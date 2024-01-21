@@ -380,7 +380,7 @@ func (self *AudioEncoder) encode(frame av.AudioFrame) (gotpkt bool, pktMany [][]
 	}
 
 	for ret >= C.int(0) {
-		ret = C.avcodec_receive_packet(ff.codecCtx, cpkt)
+		ret = C.avcodec_receive_packet(ff.codecCtx, &cpkt)
 
 		if ret < C.int(0) {
 			return
@@ -620,7 +620,7 @@ func (self *AudioDecoder) Decode(pkt []byte) (gotframe bool, frame av.AudioFrame
 	}
 
 	for ret >= C.int(0) {
-		ret = C.avcodec_receive_frame(ff.codecCtx, frame)
+		ret = C.avcodec_receive_frame(ff.codecCtx, &frame)
 		if ret < C.int(0) {
 			err = fmt.Errorf("ffmpeg: avcodec_receive_frame failed: %d", ret)
 			return
