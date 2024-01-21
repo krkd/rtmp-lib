@@ -28,9 +28,9 @@ static inline int avcodec_profile_name_to_int(AVCodec *codec, const char *name) 
 	return FF_PROFILE_UNKNOWN;
 }
 
-int wrap_avcodec_decode_audio4(AVCodecContext *ctx, AVFrame *frame, void *data, int size, int *got) {
+int wrap_avcodec_send_packet(AVCodecContext *ctx, void *data, int size) {
 	struct AVPacket pkt = {.data = data, .size = size};
-	return avcodec_decode_audio4(ctx, frame, got, &pkt);
+	return avcodec_send_packet(ctx, &pkt);
 }
 int wrap_swresample_convert(SwrContext *avr, int *out, int outcount, int *in,  int incount) {
 	return swr_convert(avr, (void *)out, outcount, (void *)in, incount);
@@ -41,11 +41,12 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/krkd/rtmp-lib/aac"
-	"github.com/krkd/rtmp-lib/av"
 	"runtime"
 	"time"
 	"unsafe"
+
+	"github.com/krkd/rtmp-lib/aac"
+	"github.com/krkd/rtmp-lib/av"
 )
 
 type ffctx struct {
@@ -361,7 +362,7 @@ func (self *AudioEncoder) CodecData() (codec av.AudioCodecData, err error) {
 	return
 }
 
-func (self *AudioEncoder) encodeOne(frame av.AudioFrame) (gotpkt bool, pkt []byte, err error) {
+func (self *AudioEncoder) encode(frame av.AudioFrame) (gotpkt bool, pktMany [][]byte, err error) {
 	if err = self.prepare(); err != nil {
 		return
 	}
@@ -369,20 +370,24 @@ func (self *AudioEncoder) encodeOne(frame av.AudioFrame) (gotpkt bool, pkt []byt
 	ff := &self.ff.ff
 
 	cpkt := C.AVPacket{}
-	cgotpkt := C.int(0)
 	audioFrameAssignToFF(frame, ff.frame)
 
-	cerr := C.avcodec_encode_audio2(ff.codecCtx, &cpkt, ff.frame, &cgotpkt)
-	if cerr < C.int(0) {
-		err = fmt.Errorf("ffmpeg: avcodec_encode_audio2 failed: %d", cerr)
+	ret := C.avcodec_send_frame(ff.codecCtx, ff.frame)
+
+	if ret < C.int(0) {
+		err = fmt.Errorf("ffmpeg: avcodec_send_frame failed: %d", ret)
 		return
 	}
 
-	if cgotpkt != 0 {
-		gotpkt = true
-		pkt = C.GoBytes(unsafe.Pointer(cpkt.data), cpkt.size)
-		C.av_packet_unref(&cpkt)
+	for ret >= C.int(0) {
+		ret = C.avcodec_receive_packet(ff.codecCtx, cpkt)
 
+		if ret < C.int(0) {
+			return
+		}
+		gotpkt = true
+		pktMany = append(pktMany, C.GoBytes(unsafe.Pointer(cpkt.data), cpkt.size))
+		C.av_packet_unref(&cpkt)
 	}
 
 	return
@@ -404,7 +409,7 @@ func (self *AudioEncoder) resample(in av.AudioFrame) (out av.AudioFrame, err err
 
 func (self *AudioEncoder) Encode(frame av.AudioFrame) (pkts [][]byte, err error) {
 	var gotpkt bool
-	var pkt []byte
+	var pktMany [][]byte
 
 	if frame.SampleFormat != self.SampleFormat || frame.ChannelLayout != self.ChannelLayout || frame.SampleRate != self.SampleRate {
 		if frame, err = self.resample(frame); err != nil {
@@ -420,20 +425,20 @@ func (self *AudioEncoder) Encode(frame av.AudioFrame) (pkts [][]byte, err error)
 		}
 		for self.framebuf.SampleCount >= self.FrameSampleCount {
 			frame := self.framebuf.Slice(0, self.FrameSampleCount)
-			if gotpkt, pkt, err = self.encodeOne(frame); err != nil {
+			if gotpkt, pktMany, err = self.encode(frame); err != nil {
 				return
 			}
 			if gotpkt {
-				pkts = append(pkts, pkt)
+				pkts = append(pkts, pktMany...)
 			}
 			self.framebuf = self.framebuf.Slice(self.FrameSampleCount, self.framebuf.SampleCount)
 		}
 	} else {
-		if gotpkt, pkt, err = self.encodeOne(frame); err != nil {
+		if gotpkt, pktMany, err = self.encode(frame); err != nil {
 			return
 		}
 		if gotpkt {
-			pkts = append(pkts, pkt)
+			pkts = append(pkts, pktMany...)
 		}
 	}
 
@@ -608,20 +613,24 @@ func (self *AudioDecoder) Setup() (err error) {
 func (self *AudioDecoder) Decode(pkt []byte) (gotframe bool, frame av.AudioFrame, err error) {
 	ff := &self.ff.ff
 
-	cgotframe := C.int(0)
-	cerr := C.wrap_avcodec_decode_audio4(ff.codecCtx, ff.frame, unsafe.Pointer(&pkt[0]), C.int(len(pkt)), &cgotframe)
-	if cerr < C.int(0) {
-		err = fmt.Errorf("ffmpeg: avcodec_decode_audio4 failed: %d", cerr)
+	ret := C.wrap_avcodec_send_packet(ff.codecCtx, unsafe.Pointer(&pkt[0]), C.int(len(pkt)))
+	if ret < C.int(0) {
+		err = fmt.Errorf("ffmpeg: avcodec_decode_audio4 failed: %d", ret)
 		return
 	}
 
-	if cgotframe != C.int(0) {
+	for ret >= C.int(0) {
+		ret = C.avcodec_receive_frame(ff.codecCtx, frame)
+		if ret < C.int(0) {
+			err = fmt.Errorf("ffmpeg: avcodec_receive_frame failed: %d", ret)
+			return
+		}
+
 		gotframe = true
 		audioFrameAssignToAV(ff.frame, &frame)
 		frame.SampleRate = self.SampleRate
-
+		return
 	}
-
 	return
 }
 
